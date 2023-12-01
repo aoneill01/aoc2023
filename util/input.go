@@ -35,7 +35,7 @@ func ReadDay(day int) []string {
 }
 
 func downloadInput(day int) string {
-	url := fmt.Sprintf("https://adventofcode.com/2022/day/%d/input", day)
+	url := fmt.Sprintf("https://adventofcode.com/2023/day/%d/input", day)
 	c := http.Client{Timeout: time.Duration(3) * time.Second}
 
 	session := &http.Cookie{

@@ -5,24 +5,40 @@ import (
 	"testing"
 )
 
-const sampleInput = `1000
-2000
-3000
+const sampleInput1 = `1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet`
 
-4000
+const sampleInput2 = `two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen`
 
-5000
-6000
+func TestCalibrationValue(t *testing.T) {
+	got := CalibrationValue("a1b2c3d4e5f")
+	want := 15
 
-7000
-8000
-9000
-
-10000`
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
+	}
+}
 
 func TestPart1(t *testing.T) {
-	got := Part1(strings.Split(sampleInput, "\n"))
-	want := 24000
+	got := Part1(strings.Split(sampleInput1, "\n"))
+	want := 142
+
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
+	}
+}
+
+func TestCalibrationValue2(t *testing.T) {
+	got := CalibrationValue2("eightwo")
+	want := 82
 
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
@@ -30,8 +46,8 @@ func TestPart1(t *testing.T) {
 }
 
 func TestPart2(t *testing.T) {
-	got := Part2(strings.Split(sampleInput, "\n"))
-	want := 45000
+	got := Part2(strings.Split(sampleInput2, "\n"))
+	want := 281
 
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
