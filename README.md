@@ -6,4 +6,4 @@ Repository for storing my solutions to the [2023 Advent of Code](https://advento
 
 1. Install Go.
 2. Create a `.env` file in the root folder and add your session cookie like `AOC_SESSION=`
-3. `go run ./day01`
+3. `go run ./dayXX`
