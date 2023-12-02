@@ -49,6 +49,7 @@ func downloadInput(day int) string {
 		log.Fatalf("Error with HTTP request: %s", err.Error())
 	}
 	req.AddCookie(session)
+	req.Header.Set("User-Agent", "github.com/aoneill01/aoc2023")
 
 	resp, err := c.Do(req)
 	if err != nil {
