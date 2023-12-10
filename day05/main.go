@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 type AlminacMap []AlminacTranslation
@@ -59,21 +60,35 @@ func part1(input []string) int {
 
 func part2(input []string) int {
 	seeds, maps := parseInput(input)
+	var mutex *sync.Mutex = new(sync.Mutex)
+	var wg *sync.WaitGroup = new(sync.WaitGroup)
+
 	min := -1
 
 	for i := 0; i < len(seeds); i += 2 {
-		// fmt.Printf("%d - %d\n", seeds[i], seeds[i]+seeds[i+1]-1)
-		for j := 0; j < seeds[i+1]; j++ {
-			id := seeds[i] + j
-			for _, am := range maps {
-				id = am.mapInput(id)
+		wg.Add(1)
+		go func(seedStart int, seedRange int, maps []AlminacMap, mutex *sync.Mutex, wg *sync.WaitGroup) {
+			defer wg.Done()
+			localMin := -1
+			// fmt.Printf("%d - %d\n", seedStart, seedStart+seedRange-1)
+			for j := 0; j < seedRange; j++ {
+				id := seedStart + j
+				for _, am := range maps {
+					id = am.mapInput(id)
+				}
+				if localMin == -1 || id < localMin {
+					localMin = id
+				}
 			}
-			if min == -1 || id < min {
-				min = id
+			mutex.Lock()
+			if min == -1 || localMin < min {
+				min = localMin
 			}
-		}
-
+			mutex.Unlock()
+		}(seeds[i], seeds[i+1], maps, mutex, wg)
 	}
+
+	wg.Wait()
 
 	return min
 }
