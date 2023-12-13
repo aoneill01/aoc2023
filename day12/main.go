@@ -3,7 +3,6 @@ package main
 import (
 	"aoc2023/util"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 )
@@ -11,6 +10,11 @@ import (
 type row struct {
 	condition string
 	springs   []int
+}
+
+type key struct {
+	i int
+	j int
 }
 
 func main() {
@@ -23,14 +27,11 @@ func main() {
 func part1(input []string) int {
 	rows := parseInput(input)
 
-	// fmt.Printf("%+v\n", rows)
-
 	count := 0
 
 	for _, row := range rows {
-		c := possibleArrangements("", row)
-		// fmt.Println(c)
-		count += c
+		cache := make(map[key]int)
+		count += possibleArrangements(0, 0, row, cache)
 	}
 
 	return count
@@ -43,14 +44,11 @@ func part2(input []string) int {
 		rows = append(rows, expandRow(row))
 	}
 
-	// fmt.Printf("%+v\n", rows)
-
 	count := 0
 
 	for _, row := range rows {
-		c := possibleArrangements("", row)
-		fmt.Println(c)
-		count += c
+		cache := make(map[key]int)
+		count += possibleArrangements(0, 0, row, cache)
 	}
 
 	return count
@@ -75,59 +73,75 @@ func parseInput(input []string) []row {
 	return results
 }
 
-func possibleArrangements(prefix string, r row) int {
-	i := len(prefix)
-
-	for i < len(r.condition) && r.condition[i] != '?' {
-		prefix = prefix + string(r.condition[i])
-		i++
+func possibleArrangements(conditionIndex int, springIndex int, r row, cache map[key]int) int {
+	// Are there enough remaining to have a possible solution?
+	minLength := len(r.springs) - springIndex - 1
+	if minLength < 0 {
+		minLength = 0
+	}
+	for i := springIndex; i < len(r.springs); i++ {
+		minLength += r.springs[i]
+	}
+	if len(r.condition)-conditionIndex < minLength {
+		cache[key{conditionIndex, springIndex}] = 0
+		return 0
 	}
 
-	if i == len(r.condition) {
-		if isValid(prefix, r.springs) {
-			return 1
-		} else {
-			return 0
+	// No remaining springs to process
+	if springIndex == len(r.springs) {
+		for i := conditionIndex; i < len(r.condition); i++ {
+			if r.condition[i] == '#' {
+				cache[key{conditionIndex, springIndex}] = 0
+				return 0
+			}
 		}
+		cache[key{conditionIndex, springIndex}] = 1
+		return 1
 	}
-
-	s := calculateSprings(prefix)
-	if len(s) > 1 {
-		if len(s) > len(r.springs) || !reflect.DeepEqual(s[:len(s)-1], r.springs[:len(s)-1]) {
-			return 0
-		}
-	}
-
-	return possibleArrangements(prefix+"#", r) + possibleArrangements(prefix+".", r)
-}
-
-func isValid(condition string, springs []int) bool {
-	tmp := calculateSprings(condition)
-	// fmt.Printf("%s %+v %+v\n", condition, tmp, springs)
-	return reflect.DeepEqual(tmp, springs)
-}
-
-func calculateSprings(condition string) []int {
-	results := []int{}
 
 	count := 0
-	for i, curr := range condition {
-		prev := byte('.')
-		if i > 0 {
-			prev = condition[i-1]
+	springRun := r.springs[springIndex]
+
+outer:
+	for startIndex := conditionIndex; startIndex < len(r.condition); startIndex++ {
+		for delta := 0; delta < springRun; delta++ {
+			if startIndex+delta >= len(r.condition) {
+				break outer
+			}
+			if r.condition[startIndex+delta] == '.' {
+				if r.condition[startIndex] == '#' {
+					break outer
+				}
+				continue outer
+			}
 		}
-		if curr == '#' {
-			count++
-		} else if prev == '#' {
-			results = append(results, count)
-			count = 0
+		if startIndex+springRun == len(r.condition) {
+			k := key{startIndex + springRun, springIndex + 1}
+			var tmp int
+			if v, ok := cache[k]; ok {
+				tmp = v
+			} else {
+				tmp = possibleArrangements(startIndex+springRun, springIndex+1, r, cache)
+			}
+			count += tmp
+		} else if r.condition[startIndex+springRun] != '#' {
+			k := key{startIndex + springRun + 1, springIndex + 1}
+			var tmp int
+			if v, ok := cache[k]; ok {
+				tmp = v
+			} else {
+				tmp = possibleArrangements(startIndex+springRun+1, springIndex+1, r, cache)
+			}
+			count += tmp
 		}
-	}
-	if count != 0 {
-		results = append(results, count)
+
+		if r.condition[startIndex] == '#' {
+			break outer
+		}
 	}
 
-	return results
+	cache[key{conditionIndex, springIndex}] = count
+	return count
 }
 
 func expandRow(r row) row {
