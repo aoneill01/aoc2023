@@ -30,28 +30,9 @@ func TestPart1(t *testing.T) {
 
 func TestPart2(t *testing.T) {
 	got := part2(strings.Split(sample1, "\n"))
-	want := -1
+	want := 94
 
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
 	}
 }
-
-// map[
-// 	{0, 0}~{row:-1 col:0}:map[
-// 		{0, 1}~{row:0 col:1}:4 {0, 2}~{row:0 col:1}:5 {0, 3}~{row:0 col:1}:8 {1, 0}~{row:1 col:0}:3 {2, 0}~{row:1 col:0}:6 {3, 0}~{row:1 col:0}:9
-// 	]
-// 	{0, 0}~{row:0 col:-1}:map[
-// 		{0, 1}~{row:0 col:1}:4 {0, 2}~{row:0 col:1}:5 {0, 3}~{row:0 col:1}:8 {1, 0}~{row:1 col:0}:3 {2, 0}~{row:1 col:0}:6 {3, 0}~{row:1 col:0}:9
-// 	]
-// 	{0, 0}~{row:0 col:1}:map[
-// 		{1, 0}~{row:1 col:0}:3 {2, 0}~{row:1 col:0}:6 {3, 0}~{row:1 col:0}:9
-// 	]
-// 	{0, 0}~{row:1 col:0}:map[
-// 		{0, 1}~{row:0 col:1}:4 {0, 2}~{row:0 col:1}:5 {0, 3}~{row:0 col:1}:8
-// 	]
-// ]
-
-// {0, 0}~{row:-1 col:0}
-// ~{row:-1 col:0}
-// ~{row:0 col:-1}
