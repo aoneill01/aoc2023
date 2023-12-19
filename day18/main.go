@@ -4,7 +4,6 @@ import (
 	"aoc2023/util"
 	"fmt"
 	"regexp"
-	"sort"
 	"strconv"
 )
 
@@ -18,10 +17,9 @@ type minMax struct {
 	max int
 }
 
-type verticalLine struct {
-	x         int
-	yRange    minMax
-	direction string
+type point struct {
+	x int
+	y int
 }
 
 func (mm minMax) update(val int) minMax {
@@ -40,10 +38,6 @@ func (mm minMax) size() int {
 
 func (mm minMax) includes(val int) bool {
 	return val >= mm.min && val <= mm.max
-}
-
-func (mm minMax) onEdge(val int) bool {
-	return val == mm.min || val == mm.max
 }
 
 var re = regexp.MustCompile(`^(.) (\d+) \(#(.*)\)$`)
@@ -71,7 +65,6 @@ func part1(input []string) int {
 
 	rows[0] = minMax{0, 0}
 
-	//	fmt.Print(instructions)
 	for _, instruction := range instructions {
 		delta := deltas[instruction.direction]
 		for i := 0; i < instruction.distance; i++ {
@@ -112,10 +105,6 @@ func part1(input []string) int {
 
 	fill(0, 0, grid)
 
-	for _, line := range grid {
-		fmt.Println(string(line))
-	}
-
 	result := 0
 
 	for r := range grid {
@@ -131,144 +120,57 @@ func part1(input []string) int {
 
 func part2(input []string) int {
 	instructions := parseInput2(input)
-	var x, y, minY int
-	verticalLines := []verticalLine{}
-	yStopsMap := map[int]bool{}
+	var x, y int
+	points1 := make([]point, 0, len(instructions))
+	points2 := make([]point, 0, len(instructions))
 
-	for _, instruction := range instructions {
-		delta := deltas[instruction.direction]
-		origY := y
-		x += instruction.distance * delta.x
-		y += instruction.distance * delta.y
+	for i, instr := range instructions {
+		delta := deltas[instr.direction]
+		x += instr.distance * delta.x
+		y += instr.distance * delta.y
 
-		if origY != y {
-			verticalLines = append(verticalLines, verticalLine{x, minMax{y, y}.update(origY), instruction.direction})
-			yStopsMap[y] = true
-			yStopsMap[origY] = true
+		var deltaX, deltaY int
+		var nextInstr instruction
+		if i == len(instructions)-1 {
+			nextInstr = instructions[len(instructions)-1]
+		} else {
+			nextInstr = instructions[i+1]
 		}
-		if y < minY {
-			minY = y
+		if nextInstr.direction == "D" || instr.direction == "D" {
+			deltaX = 1
 		}
-	}
-
-	yStops := []int{}
-	for yStop := range yStopsMap {
-		yStops = append(yStops, yStop)
-	}
-	sort.Ints(yStops)
-	fmt.Println(yStops)
-
-	sort.Slice(verticalLines, func(i, j int) bool {
-		return verticalLines[i].x < verticalLines[j].x
-	})
-
-	fmt.Println(x, y, verticalLines)
-
-	result := 0
-
-	for i := 0; i < len(yStops); i++ {
-		w := width(yStops[i], verticalLines)
-		result += w
-
-		fmt.Println("A", yStops[i], w)
-
-		if i < len(yStops)-1 && yStops[i+1] != yStops[i]+1 {
-			w = width(yStops[i]+1, verticalLines)
-			h := yStops[i+1] - yStops[i] - 1
-			fmt.Println("B", yStops[i]+1, w, h, w*h)
-			result += w * h
+		if nextInstr.direction == "L" || instr.direction == "L" {
+			deltaY = 1
 		}
+
+		points1 = append(points1, point{x + deltaX, y + deltaY})
+		deltaX = 1 - deltaX
+		deltaY = 1 - deltaY
+		points2 = append(points2, point{x + deltaX, y + deltaY})
 	}
 
-	return result
+	var result1, result2 int
 
-	//y = minY
-	// for {
-	// 	intersecting := []verticalLine{}
-	// 	for _, l := range verticalLines {
-	// 		if l.yRange.includes(y) {
-	// 			intersecting = append(intersecting, l)
-	// 		}
-	// 	}
-
-	// 	if len(intersecting) == 0 {
-	// 		return result
-	// 	}
-	// 	fmt.Println(len(intersecting))
-
-	// 	nextY := intersecting[0].yRange.max
-	// 	for _, l := range intersecting {
-	// 		if l.yRange.max < nextY {
-	// 			nextY = l.yRange.max
-	// 		}
-	// 	}
-	// 	if nextY == y {
-	// 		nextY++
-	// 	}
-	// 	firstDirection := intersecting[0].direction
-	// 	filtered := []verticalLine{}
-	// 	for i, l := range intersecting {
-	// 		if l.direction == firstDirection && (i > 0 && intersecting[i-1].direction == firstDirection) {
-	// 			continue
-	// 		}
-	// 		if l.direction != firstDirection && (i < len(intersecting)-1 && intersecting[i+1].direction != firstDirection) {
-	// 			continue
-	// 		}
-	// 		filtered = append(filtered, l)
-	// 	}
-	// 	if len(filtered)%2 != 0 {
-	// 		fmt.Println("BAD!")
-	// 	}
-	// 	width := 0
-	// 	for i := 0; i < len(filtered); i += 2 {
-	// 		width += filtered[i+1].x - filtered[i].x + 1
-	// 	}
-	// 	result += width * (nextY - y)
-	// 	fmt.Println(y, nextY, width, nextY-y, result, intersecting)
-
-	// 	y = nextY
-
-	// }
-
-}
-
-func width(y int, verticalLines []verticalLine) int {
-	intersecting := []verticalLine{}
-	for _, l := range verticalLines {
-		if l.yRange.includes(y) {
-			intersecting = append(intersecting, l)
+	for i := 0; i < len(points1); i++ {
+		a1 := points1[i]
+		a2 := points2[i]
+		var b1, b2 point
+		if i < len(points1)-1 {
+			b1 = points1[i+1]
+			b2 = points2[i+1]
+		} else {
+			b1 = points1[0]
+			b2 = points2[0]
 		}
+
+		result1 += a1.y * (a1.x - b1.x)
+		result2 += a2.y * (a2.x - b2.x)
 	}
 
-	firstDirection := intersecting[0].direction
-	filtered := []verticalLine{}
-	for i, l := range intersecting {
-		if l.direction == firstDirection && (i > 0 && intersecting[i-1].direction == firstDirection) {
-			continue
-		}
-		if l.direction != firstDirection && (i < len(intersecting)-1 && intersecting[i+1].direction != firstDirection) {
-			continue
-		}
-		filtered = append(filtered, l)
+	if result1 > result2 {
+		return result1
 	}
-	if len(filtered)%2 != 0 {
-		fmt.Println("BAD!")
-	}
-	width := 0
-	for i := 0; i < len(filtered); i += 2 {
-		width += filtered[i+1].x - filtered[i].x + 1
-	}
-	for i := 1; i < len(filtered)-1; i += 2 {
-		if y == filtered[i].yRange.min && filtered[i].yRange.min == filtered[i+1].yRange.min {
-			fmt.Println("!!!", y)
-			width += filtered[i+1].x - filtered[i].x - 1
-		}
-		// if y == filtered[i].yRange.max && filtered[i].yRange.max == filtered[i+1].yRange.max {
-		// 	fmt.Println("???", y)
-		// 	width += filtered[i+1].x - filtered[i].x - 1
-		// }
-	}
-	return width
+	return result2
 }
 
 func parseInput(input []string) []instruction {

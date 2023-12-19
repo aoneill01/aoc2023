@@ -32,7 +32,6 @@ func TestPart1(t *testing.T) {
 func TestPart2(t *testing.T) {
 	got := part2(strings.Split(sample1, "\n"))
 	want := 952408144115
-	// want := 62
 
 	if got != want {
 		t.Errorf("got %d want %d", got, want)
@@ -51,17 +50,4 @@ func TestPart2(t *testing.T) {
 		  .              .       .               .
 		  .              .       .               .
 		  1186328--------1186328 1186328---------1186328
-
-
-
-
-
-
-
-
-
-
-
-
-
 */
